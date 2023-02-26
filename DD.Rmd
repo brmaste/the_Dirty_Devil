@@ -1,0 +1,105 @@
+---
+title: "Dirty Devil River Discharge"
+author: "Brian"
+date: "2/25/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(dataRetrieval)
+library(dygraphs)
+library(xts)
+library(revealjs)
+
+library(snotelr)
+library(riem)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(dataRetrieval)
+library(lubridate)
+library(sf)
+library(ggthemes)
+library(xts)
+library(dygraphs)
+library(scales)
+library(openair)
+library(plotly)
+library(SciViews)
+knitr::opts_chunk$set(message = F, 
+                      warning = F,
+                      cache = T)
+knitr::opts_chunk$set(echo = TRUE)
+library(trend)
+library(nhdplusTools)
+library(lfstat)
+library(ggpubr)
+library(kableExtra)
+
+#Stats
+library(forcats)
+library(stringr)
+library(trend)
+```
+
+#### NWIS data
+
+```{r downloader}
+q <- readNWISdv(siteNumbers = '09333500',
+                parameterCd = '00060',
+                startDate = '2002-01-01',
+                endDate = '2022-03-20') %>%
+  rename(q = 'X_00060_00003') %>% 
+  select(-X_00060_00003_cd)
+```
+
+####  Discharge, 2002-2022
+
+```{r Static, warning = FALSE, fig.width = 8, fig.height = 5}
+ggplot(q, aes(x = Date, y = q)) + 
+  geom_line() + 
+  ylab('Q (cfs)') + 
+  ggtitle('Discharge For the Dirty Devil River, UT')
+```
+
+#### Interactive Data Plotter
+
+```{r data plotter}
+q_xts <- xts(q$q, order.by = q$Date)
+dygraph(q_xts) %>%
+  dyAxis("y", label = "Discharge (cfs)") 
+```
+
+#### March Discharge
+
+```{r March clean}
+
+q_march <- q %>% 
+  addWaterYear() %>%
+  group_by(waterYear)%>% 
+  mutate(waterDay = (as.integer(difftime(Date, ymd(paste0(waterYear - 1 ,'-09-30')), units = "days")))) %>% filter(waterDay >= 162, waterDay <= 168) %>% 
+  group_by(waterDay) %>% 
+  mutate(avg = mean(q))
+
+
+```
+
+#### March Discharge, 2002-2022
+
+```{r March, warning = FALSE, fig.width = 8, fig.height = 5}
+ggplot(q_march) + 
+  geom_line(mapping = aes(x = waterDay, q, color=waterYear, group=waterYear), size = 1)+ 
+  geom_line(mapping = aes(x = waterDay, y = avg), size = 1.5)+
+  #geom_smooth(method = lm) +
+  scale_x_log10() +
+  theme_few() +
+  scale_colour_gradient2(low = "blue", mid = "yellow" , high = "red", 
+                         midpoint=2012)+
+  ylab('Q (cfs)')+
+  xlab('Water Day')
+```
+
+**Discharge (cfs) for 2002-2022 for March 11-17. Average discharge is the black line.**
