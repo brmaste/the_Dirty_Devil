@@ -183,6 +183,21 @@ ggplot(may_moab_572) +
 *Daily average temperature (°C) at La Sal Mountain SNOTEL (572) for May 8- May 31, 1980-2022.*
 
 
+### Precipitation 
+
+```{r May precip plot}
+ggplot(may_moab_572) +
+  geom_point(mapping = aes(x = waterDay, y= precipitation, color=waterYear, group=waterYear), size = 2)+ 
+  scale_x_log10() +
+  theme_few() +
+  scale_color_viridis_b() +
+  ylab('Precipitation (mm)')+
+  xlab('Water Day')
+
+```
+
+*Precipitation (mm) at La Sal Mountain SNOTEL (572) for May 8- May 31, 1980-2022.*
+
 
 # Fort Collins Weirdness
 
